@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GLUE — Catálogos · Crawlers · Transformación | teracloud</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --purple-dark: #3b0764;
+      --purple-mid: #5b21b6;
+      --purple-light: #7c3aed;
+      --purple-glow: #9333ea;
+      --lime: #c8f031;
+      --lime-dim: #a8d020;
+      --white: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.82);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--purple-dark);
+      color: var(--white);
+      font-family: "Montserrat", Arial, Helvetica, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .deck {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* Starfield background */
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 25%, rgba(255,255,255,0.06) 0%, transparent 40%),
+        radial-gradient(circle at 85% 70%, rgba(200,240,49,0.05) 0%, transparent 35%),
+        linear-gradient(115deg, var(--purple-dark) 0%, var(--purple-mid) 45%, var(--purple-light) 100%);
+      z-index: 0;
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.5) 50%, transparent 50%),
+        radial-gradient(1px 1px at 25% 80%, rgba(255,255,255,0.35) 50%, transparent 50%),
+        radial-gradient(1.5px 1.5px at 70% 20%, rgba(255,255,255,0.4) 50%, transparent 50%),
+        radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.3) 50%, transparent 50%),
+        radial-gradient(1px 1px at 50% 45%, rgba(255,255,255,0.25) 50%, transparent 50%),
+        radial-gradient(1px 1px at 35% 35%, rgba(200,240,49,0.3) 50%, transparent 50%),
+        radial-gradient(1px 1px at 80% 85%, rgba(255,255,255,0.35) 50%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100vh;
+      padding: 88px 72px 88px;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      animation: fadeIn 0.35s ease;
+      overflow: hidden;
+    }
+
+    .slide.active { display: flex; }
+
+    .slide > * { position: relative; z-index: 1; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Brand logo — top left on every slide */
+    .brand {
+      position: absolute;
+      top: 36px;
+      left: 48px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand .tera { color: var(--white); }
+    .brand .cloud-part { color: var(--lime); position: relative; }
+
+    .brand .cloud-icon {
+      display: inline-block;
+      width: 22px;
+      height: 16px;
+      margin: 0 1px;
+      vertical-align: middle;
+      position: relative;
+      top: -2px;
+    }
+
+    /* Title slide */
+    .slide.title-slide {
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      padding-top: 48px;
+    }
+
+    .slide.title-slide .brand {
+      top: 40px;
+      left: 48px;
+    }
+
+    .slide.title-slide h1 {
+      font-size: clamp(4.5rem, 12vw, 8rem);
+      margin: 0;
+      font-weight: 800;
+      font-style: italic;
+      color: var(--lime);
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 60px rgba(200, 240, 49, 0.25);
+    }
+
+    .slide.title-slide .subtitle {
+      margin-top: 24px;
+      font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+      color: var(--lime);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* Content slides */
+    .slide h2 {
+      margin: 0 0 32px;
+      font-size: clamp(1.5rem, 3.2vw, 2.2rem);
+      color: var(--lime);
+      border-bottom: 2px solid rgba(200, 240, 49, 0.35);
+      padding-bottom: 14px;
+      line-height: 1.25;
+      max-width: 920px;
+      font-weight: 700;
+    }
+
+    .slide ul {
+      margin: 0;
+      padding: 0 0 0 28px;
+      max-width: 920px;
+      list-style: none;
+    }
+
+    .slide ul li {
+      position: relative;
+      margin: 16px 0;
+      font-size: clamp(0.95rem, 1.9vw, 1.15rem);
+      line-height: 1.55;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .slide ul li::before {
+      content: "▸";
+      position: absolute;
+      left: -24px;
+      color: var(--lime);
+      font-weight: bold;
+    }
+
+    .slide ul li strong { color: var(--white); }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      max-width: 1000px;
+      width: 100%;
+    }
+
+    .col {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(200, 240, 49, 0.2);
+      border-radius: 16px;
+      padding: 24px 28px;
+      backdrop-filter: blur(4px);
+    }
+
+    .col h3 {
+      margin: 0 0 16px;
+      font-size: 1.1rem;
+      color: var(--lime);
+      border-bottom: 1px solid rgba(200, 240, 49, 0.25);
+      padding-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .col ul { max-width: none; padding-left: 20px; }
+    .col ul li { font-size: 0.95rem; margin: 10px 0; color: var(--text-muted); }
+
+    .flow {
+      background: rgba(0, 0, 0, 0.35);
+      color: var(--lime);
+      border: 1px solid rgba(200, 240, 49, 0.25);
+      padding: 28px 36px;
+      border-radius: 14px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: clamp(0.82rem, 1.7vw, 1rem);
+      line-height: 1.75;
+      max-width: 720px;
+      white-space: pre-line;
+    }
+
+    .slide.highlight-slide {
+      align-items: center;
+      text-align: center;
+    }
+
+    .slide.highlight-slide h2 {
+      text-align: center;
+      max-width: 800px;
+      font-size: clamp(2rem, 5vw, 3rem);
+      border-bottom: none;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .slide.highlight-slide ul { max-width: 700px; }
+    .slide.highlight-slide ul li {
+      color: var(--white);
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+
+    .slide.fun-slide ul li { font-size: 1.15rem; }
+
+    code {
+      background: rgba(200, 240, 49, 0.15);
+      color: var(--lime);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 0.88em;
+      border: 1px solid rgba(200, 240, 49, 0.2);
+    }
+
+    a {
+      color: var(--lime);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    a:hover { color: var(--white); }
+
+    .doc-links {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(200, 240, 49, 0.25);
+      max-width: 920px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .doc-links p { margin: 6px 0; }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(59, 7, 100, 0.92);
+      border-top: 1px solid rgba(200, 240, 49, 0.2);
+      color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 28px;
+      z-index: 100;
+      font-size: 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav button {
+      background: var(--lime);
+      color: var(--purple-dark);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: inherit;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .nav button:hover { background: var(--white); transform: translateY(-1px); }
+    .nav button:disabled {
+      background: rgba(200, 240, 49, 0.25);
+      color: rgba(255, 255, 255, 0.4);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .nav .counter {
+      font-variant-numeric: tabular-nums;
+      color: var(--lime);
+      font-weight: 600;
+    }
+
+    .nav .hint { opacity: 0.55; font-size: 12px; }
+
+    @media (max-width: 768px) {
+      .slide { padding: 80px 28px 80px; }
+      .brand { top: 24px; left: 24px; font-size: 22px; }
+      .two-col { grid-template-columns: 1fr; }
+      .nav .hint { display: none; }
+    }
+
+    @media print {
+      body { overflow: visible; }
+      .deck { height: auto; }
+      .slide {
+        display: flex !important;
+        height: auto;
+        min-height: 100vh;
+        page-break-after: always;
+      }
+      .nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck">
+
+    <!-- Slide 1: Title -->
+    <section class="slide title-slide active" data-slide="1">
+      <div class="brand" aria-label="teracloud">
+        <span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span>
+      </div>
+      <h1>GLUE</h1>
+      <p class="subtitle">Catálogos · Crawlers · Transformación</p>
+    </section>
+
+    <!-- Slide 2 -->
+    <section class="slide" data-slide="3">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>¿Dónde encaja Glue?</h2>
+      <ul>
+        <li>S3 guarda los archivos. RDS guarda las transacciones.</li>
+        <li>Glue es el «traductor» que entiende qué hay adentro y lo deja listo para analizar.</li>
+        <li>Hoy: Data Catalog + Crawlers + ETL sobre S3.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 4 -->
+    <section class="slide" data-slide="4">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Almacenar vs catalogar</h2>
+      <div class="two-col">
+        <div class="col">
+          <h3>S3 (almacenar)</h3>
+          <ul>
+            <li>Archivos CSV, JSON, Parquet, etc.</li>
+            <li>Durabilidad y bajo costo por GB.</li>
+            <li>Sin esquema obligatorio al escribir.</li>
+            <li>Como el depósito del data lake.</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3>Glue Catalog (catalogar)</h3>
+          <ul>
+            <li>Metadatos: tablas, columnas, tipos.</li>
+            <li>Ubicación S3 de cada tabla.</li>
+            <li>Particiones detectadas o definidas.</li>
+            <li>Sin catálogo, Athena no sabe qué leer.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 5 -->
+    <section class="slide" data-slide="5">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>AWS Glue en 30 segundos</h2>
+      <ul>
+        <li>Servicio serverless de integración de datos en AWS.</li>
+        <li><strong>Glue Data Catalog:</strong> inventario central de metadatos (tablas, columnas, particiones).</li>
+        <li><strong>Crawlers:</strong> escanean S3 y alimentan el catálogo automáticamente.</li>
+        <li><strong>ETL Jobs:</strong> transforman datos (típicamente S3 → S3). El job estándar usa <strong>Spark</strong> (PySpark); también existe <strong>Python Shell</strong> para scripts livianos en Python puro.</li>
+        <li>Se integra con Athena, Lake Formation, Redshift Spectrum y más.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 6 -->
+    <section class="slide" data-slide="6">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>El catálogo: tu mapa del tesoro</h2>
+      <ul>
+        <li>Sin catálogo, S3 es una carpeta con 10.000 archivos y cero contexto.</li>
+        <li>Tablas = punteros a datos en S3 + esquema + particiones.</li>
+        <li>Una base Glue = un namespace (ej.: <code>workshop_glue</code>).</li>
+        <li>Athena, Redshift Spectrum y otros servicios consultan el mismo catálogo — un solo inventario de metadatos.</li>
+        <li>Podés registrar tablas a mano en el catálogo; el crawler solo automatiza el descubrimiento inicial.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 7 -->
+    <section class="slide" data-slide="7">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Crawlers: el detective que a veces se equivoca</h2>
+      <ul>
+        <li>Recorren un path S3, infieren esquema y crean/actualizan tablas.</li>
+        <li>Config clave: data source, target database, frecuencia manual.</li>
+        <li>Una carpeta por entidad → una tabla por dataset (bookings, customers, etc.).</li>
+        <li>Ojo: pueden inferir STRING donde hay fechas, o ignorar particiones mal nombradas.</li>
+        <li>Es como el autocorrect del teléfono: te ahorra tiempo, pero conviene releer antes de publicar.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 8 -->
+    <section class="slide" data-slide="8">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Athena: consultar sin mover el dato</h2>
+      <ul>
+        <li>Athena lee directamente desde S3 usando el catálogo — no importa los datos a otro lado.</li>
+        <li>Eso es <strong>schema-on-read</strong>: el esquema se aplica al consultar.</li>
+        <li>Configurá siempre <code>athena-results/</code> para los outputs de las queries.</li>
+        <li>Pagás por datos escaneados — una query sin filtros se nota en el costo.</li>
+        <li>Sirve para explorar rápido y validar que el catálogo refleja lo que hay en S3.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 9 -->
+    <section class="slide" data-slide="9">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Schema-on-read vs schema-on-write</h2>
+      <div class="two-col">
+        <div class="col">
+          <h3>Schema-on-read (Data Lake)</h3>
+          <ul>
+            <li>Los datos llegan como vienen (CSV, JSON, logs).</li>
+            <li>El esquema se aplica al leer (Athena, Glue).</li>
+            <li>Flexible, rápido para ingerir.</li>
+            <li>Riesgo: inconsistencias si no gobernáis.</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3>Schema-on-write (Warehouse)</h3>
+          <ul>
+            <li>Definís tablas antes de cargar.</li>
+            <li>Datos rechazados si no cumplen.</li>
+            <li>Más riguroso para BI clásico.</li>
+            <li>Glue curated suele ser el punto medio.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 10 -->
+    <section class="slide" data-slide="10">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Particiones: el truco para no escanear medio planeta</h2>
+      <ul>
+        <li>Estructura: <code>s3://bucket/raw/ventas/year=2025/month=06/day=30/...</code></li>
+        <li>Athena y Glue pueden «podar» particiones: solo leen lo que pedís.</li>
+        <li>Query sin filtro de partición → escanea todo → más costo.</li>
+        <li>Las carpetas en S3 no existen «de verdad» — son prefijos. Pero para el catálogo, sí importan.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 11 -->
+    <section class="slide" data-slide="11">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>¿Glue, Lambda o EMR?</h2>
+      <div class="two-col">
+        <div class="col">
+          <h3>Usá Glue cuando…</h3>
+          <ul>
+            <li>Transformaciones batch sobre el Data Lake.</li>
+            <li>Querés catálogo + ETL integrado.</li>
+            <li>Trabajás con Parquet y volúmenes medianos/grandes.</li>
+            <li>No querés administrar un cluster.</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3>Otro tool cuando…</h3>
+          <ul>
+            <li>Lambda: archivos chicos, evento por archivo, lógica liviana.</li>
+            <li>EMR: Spark a escala custom, notebooks, jobs muy pesados.</li>
+            <li>DMS / App Flow: replicar bases, no transformar el lake.</li>
+            <li>No hay bala de plata — hay herramienta menos incómoda.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 12 -->
+    <section class="slide" data-slide="12">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Anatomía de un job ETL (sin entrar al sótano)</h2>
+      <ul>
+        <li><strong>Input/Source:</strong> de dónde lee (hoy: S3 en <code>raw/</code>).</li>
+        <li><strong>Transform:</strong> filtrar, limpiar, castear, deduplicar, agregar columnas.</li>
+        <li><strong>Output/Sink:</strong> dónde escribe (hoy: S3 en <code>curated/</code> en Parquet).</li>
+        <li>El job ETL estándar corre <strong>Spark</strong> por detrás — vos no administrás el cluster.</li>
+        <li>Alternativa: <strong>Python Shell</strong> para transformaciones en Python puro (pandas, boto3) sin Spark.</li>
+        <li>Otras opciones en el ecosistema: <strong>Lambda</strong> (archivos chicos) o <strong>EMR</strong> (Spark a escala custom).</li>
+        <li>Existen otras configuraciones específicas como: conexiones JDBC, job bookmarks y triggers por eventos de S3.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 13 -->
+    <section class="slide" data-slide="13">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Transformaciones típicas (curated layer)</h2>
+      <ul>
+        <li>Renombrar columnas a un estándar (snake_case, sin espacios raros).</li>
+        <li>Castear tipos: <code>string</code> → <code>date</code>, <code>string</code> → <code>int</code> donde corresponda.</li>
+        <li>Filtrar filas basura (nulls críticos, fechas imposibles, duplicados).</li>
+        <li>Enmascarar o excluir columnas PII (datos personales sensibles) según política.</li>
+        <li>Escribir en el formato que necesites: <code>.parquet</code>, particionado, compresión, etc.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 14 -->
+    <section class="slide" data-slide="14">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Calidad de datos: el plot twist del ETL</h2>
+      <ul>
+        <li>Transformar no es solo «cambiar de formato» — es confiar en lo que sale.</li>
+        <li>Checks simples: conteos antes/después, % nulls, rangos de fechas.</li>
+        <li>Si el curated tiene más filas que el raw, algo raro pasó (spoiler: duplicados).</li>
+        <li>Cuidado con JOINs que duplican métricas al unir tablas con relaciones 1 a N.</li>
+        <li>Generar documentación — tu yo del futuro te lo agradecerá.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 15 -->
+    <section class="slide" data-slide="15">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Arquitectura del workshop</h2>
+      <div class="flow">BA Data → upload → S3 raw/ (una carpeta por entidad)
+        ↓
+Crawler → Glue Data Catalog (tablas raw)
+        ↓
+Athena → explorar, JOINs, validar tipos inferidos
+        ↓
+Glue ETL Job → S3 curated/ (Parquet)
+        ↓
+Crawler / update → tabla curated → Athena
+        ↓
+PIPELINE_REPORT.md (in inglish plis) + screenshots → entregable</div>
+    </section>
+
+    <!-- Slide 16 -->
+    <section class="slide" data-slide="16">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Checklist de buenas prácticas</h2>
+      <ul>
+        <li>Una carpeta por entidad en <code>raw/</code> — no mezclar CSV de distintas tablas.</li>
+        <li><code>raw</code> = como llegó; <code>curated</code> = limpio y tipado; <code>analytics</code> = listo para consumo; no mezcles capas.</li>
+        <li>Crawler para descubrir; job ETL para corregir de verdad.</li>
+        <li>Para revisar ejecuciones de queries. Configurar <code>athena-results/</code>.</li>
+        <li>Documentá en inglés.</li>
+        <li>Borrá recursos al terminar.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 17 -->
+    <section class="slide highlight-slide" data-slide="17">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>VAMOS A LA CONSOLA</h2>
+      <ul>
+        <li>Tenemos 3 días.<br>Pipeline simple que funcione &gt; pipeline perfecto que no termina.</li>
+        <li>Consultá dudas con el equipo. Usá jobs cortos y monitoreá costos.</li>
+        <li>Entregable: <code>PIPELINE_REPORT.md</code> (un solo .md en inglés con capturas y código si hace falta).</li>
+      </ul>
+    </section>
+
+    <!-- Slide 18 -->
+    <section class="slide fun-slide" data-slide="18">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>¿Qué hacemos como Data Engineer con Glue?</h2>
+      <ul>
+        <li>🧲 Pegamos datasets que nadie quiere tocar con las manos.</li>
+        <li>🕵️ Mandamos crawlers a investigar — y corregimos cuando mienten.</li>
+        <li>🧪 Destilamos raw en curated como en un laboratorio.</li>
+        <li>📚 Escribimos docs en inglés para que el pipeline sobreviva al DE que se va.</li>
+        <li>🔍 Validamos que el catálogo y el ETL cuenten la misma historia.</li>
+        <li>📐 Diseñamos pipelines que otros puedan correr sin llamarnos.</li>
+        <li>🧹 Borramos todo al final para que FinOps no nos persiga.</li>
+      </ul>
+    </section>
+
+    <!-- Slide 19 -->
+    <section class="slide" data-slide="19">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>Recursos y siguientes pasos</h2>
+      <ul>
+        <li>Opcional después del internship: Lake Formation, job bookmarks, Step Functions.</li>
+        <li>Último consejo: si el job tarda más que tu café, revisá el código antes de tocar la configuración avanzada.</li>
+      </ul>
+      <div class="doc-links">
+        <p><strong>Documentación</strong></p>
+        <p><a href="https://docs.aws.amazon.com/glue/" target="_blank" rel="noopener">AWS Glue</a> ·
+           <a href="https://docs.aws.amazon.com/athena/latest/ug/partitions.html" target="_blank" rel="noopener">Athena — Partitions</a> ·
+           <a href="https://docs.aws.amazon.com/glue/latest/dg/add-crawler.html" target="_blank" rel="noopener">Glue Crawlers</a></p>
+      </div>
+    </section>
+
+    <!-- Slide 20: Cierre -->
+    <section class="slide highlight-slide title-slide" data-slide="20">
+      <div class="brand"><span class="tera">tera</span><span class="cloud-part">cl<svg class="cloud-icon" viewBox="0 0 24 18" fill="none"><path d="M6 14h12a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1.2A3.5 3.5 0 0 0 6 14z" fill="#c8f031"/><path d="M12 7v5M12 7l-2 2M12 7l2 2" stroke="#3b0764" stroke-width="1.5" stroke-linecap="round"/></svg>ud</span></div>
+      <h2>¿Alguna pregunta?</h2>
+      <p class="subtitle" style="margin-top: 32px; font-size: 1.4rem;">Gracias por su atención.</p>
+    </section>
+
+  </div>
+
+  <nav class="nav" aria-label="Navegación de slides">
+    <button id="prev" aria-label="Slide anterior">← Anterior</button>
+    <span class="counter"><span id="current">1</span> / <span id="total">19</span></span>
+    <span class="hint">← → o Espacio para navegar</span>
+    <button id="next" aria-label="Slide siguiente">Siguiente →</button>
+  </nav>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+
+    document.getElementById('total').textContent = total;
+
+    function showSlide(index) {
+      slides[current].classList.remove('active');
+      current = Math.max(0, Math.min(index, total - 1));
+      slides[current].classList.add('active');
+      document.getElementById('current').textContent = current + 1;
+      document.getElementById('prev').disabled = current === 0;
+      document.getElementById('next').disabled = current === total - 1;
+    }
+
+    document.getElementById('prev').addEventListener('click', () => showSlide(current - 1));
+    document.getElementById('next').addEventListener('click', () => showSlide(current + 1));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        showSlide(current + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        showSlide(current - 1);
+      } else if (e.key === 'Home') {
+        showSlide(0);
+      } else if (e.key === 'End') {
+        showSlide(total - 1);
+      }
+    });
+
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+    document.addEventListener('touchend', (e) => {
+      const diff = touchStartX - e.changedTouches[0].screenX;
+      if (Math.abs(diff) > 50) {
+        showSlide(diff > 0 ? current + 1 : current - 1);
+      }
+    });
+  </script>
+</body>
+</html>
